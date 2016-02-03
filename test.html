@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>jQuery.getJSON demo</title>
+  <style>
+  img {
+    height: 100px;
+    float: left;
+  }
+  </style>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body>
+ 
+<div id="images"></div>
+ 
+<script>
+(function() {
+
+
+var url ="https://maps.googleapis.com/maps/api/place/textsearch/json?location=42.3601,%20-71.0589&radius=500&query=restaurant&types=restaurant&key=AIzaSyDAxlH1P1xA6bRLPiDaowvKNHOFQ_MI3gA";
+ $.getJSON(url, function(data) {
+    console.dir(jd);             
+  // $('#list-places').append('<li><p>Age : ' + jd.name+ '</p></li>');
+              
+});
+//    var request_url="https://maps.googleapis.com/maps/api/place/textsearch/json?";
+// $.getJSON( "request_url",{
+//     location:'42.3601,20-71.0589',
+//     radius:'500',
+//     query:'restaurant',
+//     types:'restaurant',
+//     key:'AIzaSyDAxlH1P1xA6bRLPiDaowvKNHOFQ_MI3gA'
+// }).done(function(data){
+//   console.log(data);
+// });
+    // var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
+// $.getJSON( "request_url", function( data ) {
+//   console.log(data);
+// });
+  // $.getJSON( flickerAPI, {
+  //      location: boston,
+  //   radius: '500',
+  //   types: ['food']
+  // })
+  //   .done(function( data ) {
+  //     $.each( data.items, function( i, item ) {
+  //       $( "<img>" ).attr( "src", item.media.m ).appendTo( "#images" );
+  //       if ( i === 3 ) {
+  //         return false;
+  //       }
+  //     });
+  //   });
+})();
+</script>
+ 
+</body>
+</html>
