@@ -16,48 +16,98 @@ function initMap() {
     };
 }
 
+var Business = function (infowindow, place) {
+    var self = this;
+    self.name = place.name;
+    self.phone = place.phone;
+    self.rating = place.rating;
+    self.address =place.location.address + ", " + place.location.city;
+    self.lat = place.location.coordinate.latitude;
+    self.lon = place.location.coordinate.longitude;
+    self.googleLocationObject = new google.maps.LatLng(self.lat, self.lon);
+    self.comment = place.snippet_text;
 
-function AppViewModel() {
-    this.toBeSearched = ko.observable("Search here");
-    this.businessList = ko.observableArray([]);
-    this.search = ko.computed(function () {
-
+    self.marker = new google.maps.Marker({
+        map: map,
+        position: self.googleLocationObject,
+        infoWindow:new google.maps.InfoWindow(),
+        //draggable: true,
+        animation: google.maps.Animation.DROP,
     });
 
+    //self.infoWindow = new google.maps.InfoWindow();
+    self.marker.infoWindow.setContent('<div><strong>' + self.name + '</strong><br>' +
+        'Address: ' + self.address + '<br>' +
+        'Phone: ' + self.phone + '<br>' +
+        'rating: ' + self.rating + '<br>' +
+       //  'comment: ' + self.comment +
+        '</div>');
+    google.maps.event.addListener(self.marker, 'click', function () {
 
-    function createMarker(infowindow, place) {
-        var lat = place.location.coordinate.latitude;
-        var lon = place.location.coordinate.longitude;
-        var position = new google.maps.LatLng(lat, lon);
-        var marker = new google.maps.Marker({
-            map: map,
-            position: position,
-            draggable: true,
-            animation: google.maps.Animation.DROP,
-        });
+        // bounce after click
+        toggleBounce(self.marker);
+        // close the previous window
+        //self.marker.infoWindow.close();
+        self.marker.infoWindow.open(map, self.marker);
+        lastMarkerClicked=self.marker;
 
-        google.maps.event.addListener(marker, 'click', function () {
-            // bounce after click
-            if (marker.getAnimation() !== null) {
-                marker.setAnimation(null);
-            } else {
-                marker.setAnimation(google.maps.Animation.BOUNCE);
-                // stop bounce after 2 seconds
-                setTimeout(function () {
-                    marker.setAnimation(null);
-                }, 2000);
-            }
+    });
+}
 
-            // close the previous window
-            infowindow.close();
-            infowindow.setContent('<div><strong>' + place.name + '</strong><br>' +
-                'Address: ' + place.location.address + '<br>' +
-                'Phone: ' + place.phone + '<br>' +
-                'rating: ' + place.rating + '<br>' +
-                'comment: ' + place.snippet_text + '</div>');
-            infowindow.open(map, this);
-        });
+function toggleBounce(marker){
+    // bounce after click
+    if (marker.getAnimation() !== null) {
+        marker.setAnimation(null);
+    } else {
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        // stop bounce after 2 seconds
+        setTimeout(function () {
+            marker.setAnimation(null);
+        }, 2000);
+        setTimeout(function () {
+        marker.infoWindow.close();
+        }, 4000);
     }
+}
+
+
+function AppViewModel() {
+
+    var self = this;
+    self.toBeSearched = ko.observable("Search here");
+    self.search = ko.computed(function () {
+
+    });
+    self.filter = ko.observable("");
+    self.businessList = ko.observableArray([]);
+    self.searchedItem = ko.observableArray([]);
+    self.numBusinesses = ko.observable(0);
+
+    self.clickAction =function(business){
+        toggleBounce(business.marker);
+        business.marker.infoWindow.open(map,business.marker);
+    }
+    getDataYelpAjax(10118, "comic store");
+//ko.utils.arrayFilter - filter the items using the filter text
+    self.searchedItem = ko.dependentObservable(function() {
+        var filter = self.filter().toLowerCase();
+        if (!filter) {
+            for(var i = 0; i < self.businessList().length;i++){
+                self.businessList()[i].marker.setVisible(true);
+            }
+            return self.businessList();
+        } else {
+            return ko.utils.arrayFilter(self.businessList(), function(item) {
+                if(item.name.toLowerCase().indexOf(filter) === -1){
+                    item.marker.setVisible(false);
+                }else{
+                    item.marker.setVisible(true);
+                }
+                //return ko.utils.stringStartsWith(item.toLowerCase(), filter);
+                return item.name.toLowerCase().indexOf(filter) !== -1;
+            });
+        }
+    }, AppViewModel);
 
 
     function getDataYelpAjax(zipcodeToSearch, keyWordToSearch) {
@@ -98,9 +148,9 @@ function AppViewModel() {
          *  Create a JSON object "message" to pass on to OAuth.setTimestampAndNonce
          */
         var message = {
-            'action': 'http://api.yelp.com/v2/search',
-            'method': 'GET',
-            'parameters': parameters
+            action: 'http://api.yelp.com/v2/search',
+            method: 'GET',
+            parameters: parameters
         };
 
         /*
@@ -114,39 +164,50 @@ function AppViewModel() {
          */
 
         var parameterMap = OAuth.getParameterMap(message.parameters);
-        var res;
-        $.ajax({
-            'url': message.action,
-            'data': parameterMap,
-            'dataType': 'jsonp',
-            'global': true,
-            'jsonpCallback': 'cb',
-            'success': function (data) {
-                res=data;
+        var request = $.ajax({
+            url: message.action +'d',
+            data: parameterMap,
+            dataType: 'jsonp',
+            global:'true',
+            error: function(xhr, textStatus, errorThrown) {
+                //if (textStatus !== null) {
+                //    alert("error: " + textStatus);
+                //} else if (errorThrown !== null) {
+                //    alert("exception: " + errorThrown.message);
+                //}
+                //else {
+                    alert ("error");
+                //}
+            },
+            success: function (data) {
                 // console.dir(data);
                 generateItemList(data);
             }
+
         });
+
     }
 
     function generateItemList(jsonResponse) {
         // a list of array of business responded by yelp
         var businessArray = jsonResponse.businesses;
-        var businessList = ko.observableArray([]);
-        var businessesArrayLen = businessArray.length
+
+        //self.businessList(businessArray);
+        var businessesArrayLen = businessArray.length;
         // pass in only one instance of infoWindow to the window
         // to make sure only one window displayed after click a few markers
-        var infoWindow = new google.maps.InfoWindow();
+         var infoWindow = new google.maps.InfoWindow();
         // for each business add to the list and add a marker on the map
         for (var i = 0; i < businessesArrayLen; i++) {
-            $('#list-places').append("<li class=list-group-item id='list-places" + i + "'>" + businessArray[i].name + "<br>" + businessArray[i].location.address + '</li>');
-            google.maps.event.addDomListener(window, 'load', createMarker(infoWindow, businessArray[i]));
-            businessList.push(businessArray[i]);
+            //$('#list-places').append("<li class=list-group-item id='list-places" + i + "'>" + businessArray[i].name + "<br>" + businessArray[i].location.address + '</li>');
+           // console.log(businessArray[i].name);
+            var theBusiness = new Business(infoWindow, businessArray[i]) ;
+           // google.maps.event.addDomListener(window, 'load', Business(infoWindow, businessArray[i]));
+
+            self.businessList.push(theBusiness);
+            //self.businessListName.push(theBusiness.name);
         }
+
     }
-
-    getDataYelpAjax(10118, "comic store");
-
 }
-
 ko.applyBindings(new AppViewModel());

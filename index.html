@@ -3,49 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Neighborhood Map</title>
-    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
 
 
 </head>
 <body>
+    <section class="col-md-9" id="map"></section>
 
-<section class="col-md-9" id="map"></section>
-
-
-<aside class="col-md-3">
-    <div class="input-group">
-        <input id="pac-input" type="text" class="form-control" data-bind="value: toBeSearched">
-	  
+	<aside class="col-md-3">
+	    <div class="input-group">
+	    	<!--<input id="input" type="text" class="form-control" data-bind="value: toBeSearched" >-->
+            <p> <input data-bind="value: filter, valueUpdate: 'afterkeydown'" id="input" type="text" class="form-control" placeholder="Search " /></p>
 	      	<span class="input-group-btn">
-	        <button class="btn btn-default" type="button" data-bind="click: search">Go!</button>
+	        <!--<button class="btn btn-default" type="button" data-bind="click: search">Go!</button>-->
 	     	</span>
-    </div>
-    <tbody data-bind="foreach: seats">
-    <ul>
-        <li data-bind="text: name"></li>
-    </ul>
-    </tbody>
-    <div class="list-group">
-        <ul id='list-places' class="list-group"></ul>
-        <!--
-      <button type="button" id="item1" class="list-group-item"></button>
-      <button type="button" class="list-group-item">Dapibus ac facilisis in</button>
-      <button type="button" class="list-group-item">Morbi leo risus</button>
-      <button type="button" class="list-group-item">Porta ac consectetur ac</button>
-      <button type="button" class="list-group-item">Vestibulum at eros</button>  -->
-    </div>
+	    </div>
+	  	<div id="list-group" class="list-group">
+	  		<ul data-bind="foreach:searchedItem" id='list-places' class="list-group">
+                <li data-bind="text: name , click: $root.clickAction"></li>
+            </ul>
+		</div>
 
-</aside>
-<!-- oAuth JS script and SHA1JS for yelp oauth api request!-->
-<script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
-<script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-<script src="bower_components/knockout/dist/knockout.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAINgjWN_2R6K0LdjtxwhqZCTCS9QPHP1k&libraries=places&callback=initMap"
-        async defer></script>
+	</aside>
+	<!-- oAuth JS script and SHA1JS for yelp oauth api request!-->
+		<script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
+  	<script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+	<script src="bower_components/knockout/dist/knockout.js"></script>
+	 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAINgjWN_2R6K0LdjtxwhqZCTCS9QPHP1k&libraries=places&callback=initMap"
+    async defer></script>
 <script src="js/app.js"></script>
-</body>
+   </body>
 </html>
