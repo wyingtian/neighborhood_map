@@ -1,9 +1,39 @@
 
 html, body {
-height: 100%;
-margin: 0;
-padding: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 #map {
-height: 100%;
+    width:75%;
+    height: 100%;
+}
+/* scroll bar apply only to the search group*/
+#search-group {
+    width :25%;
+    background-color: #F5F5F5;
+    border: 1px solid #DDDDDD;
+    color: #3B3C3E;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 10px 10px 5px 5px;
+    height: 100%;
+    overflow: scroll;
+    overflow-x: hidden;
+
+}
+/* button font size*/
+.list-group-item{
+    font-size:15px;
+}
+
+/* change font size when screen is smaller than 640px wide*/
+@media only screen and (max-width:640px) {
+    #list-place {
+        color: black;
+        padding: 10px 10px 5px 5px;
+        text-align: center;
+        display: inline-block;
+        font-size: 9px;
+    }
 }

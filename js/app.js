@@ -1,5 +1,5 @@
 var map;
-
+// initialize google map, initial center is Empire state building in New York
 function initMap() {
     var myLatlng = new google.maps.LatLng(40.7484, -73.9857);
     map = new google.maps.Map(document.getElementById('map'), {
@@ -9,14 +9,17 @@ function initMap() {
         },
         zoom: 15
     });
-    // Specify location, radius and place types for your Places API search.
+
     var request = {
         location: myLatlng,
         radius: '500',
     };
 }
 
-var Business = function (infowindow, place) {
+// Business is an business object defined based on ajax input
+// it has also contains a marker object,
+// parameter 'place' is a jason object returned by yelp api
+var Business = function (place) {
     var self = this;
     self.name = place.name;
     self.phone = place.phone;
@@ -26,34 +29,28 @@ var Business = function (infowindow, place) {
     self.lon = place.location.coordinate.longitude;
     self.googleLocationObject = new google.maps.LatLng(self.lat, self.lon);
     self.comment = place.snippet_text;
-
+    // infoWindow lives within the marker
     self.marker = new google.maps.Marker({
         map: map,
         position: self.googleLocationObject,
         infoWindow:new google.maps.InfoWindow(),
-        //draggable: true,
         animation: google.maps.Animation.DROP,
     });
-
-    //self.infoWindow = new google.maps.InfoWindow();
+    // set infoWindow content
     self.marker.infoWindow.setContent('<div><strong>' + self.name + '</strong><br>' +
         'Address: ' + self.address + '<br>' +
         'Phone: ' + self.phone + '<br>' +
         'rating: ' + self.rating + '<br>' +
-       //  'comment: ' + self.comment +
         '</div>');
+    //when click on the marker, marker bounce and show info window
     google.maps.event.addListener(self.marker, 'click', function () {
-
         // bounce after click
         toggleBounce(self.marker);
-        // close the previous window
-        //self.marker.infoWindow.close();
         self.marker.infoWindow.open(map, self.marker);
-        lastMarkerClicked=self.marker;
-
     });
 }
 
+// the function to make a marker bounce and show info window
 function toggleBounce(marker){
     // bounce after click
     if (marker.getAnimation() !== null) {
@@ -66,54 +63,54 @@ function toggleBounce(marker){
         }, 2000);
         setTimeout(function () {
         marker.infoWindow.close();
-        }, 4000);
+        }, 3000);
     }
 }
 
 
 function AppViewModel() {
-
     var self = this;
-    self.toBeSearched = ko.observable("Search here");
-    self.search = ko.computed(function () {
-
-    });
+    // filter is bound to the input box to be searched
     self.filter = ko.observable("");
+    // businessList is bound to all the objects found by yelp api
     self.businessList = ko.observableArray([]);
+    // searchedItem is bound to the objects filtered by key words
     self.searchedItem = ko.observableArray([]);
-    self.numBusinesses = ko.observable(0);
-
+    // when a button in the list being clicked, this method gets called
+    // bound to <button id="list-place">
     self.clickAction =function(business){
         toggleBounce(business.marker);
         business.marker.infoWindow.open(map,business.marker);
     }
-    getDataYelpAjax(10118, "comic store");
-//ko.utils.arrayFilter - filter the items using the filter text
+    //ko.utils.arrayFilter - filter the items using the filter text
+    //filter the items based on input text
     self.searchedItem = ko.dependentObservable(function() {
         var filter = self.filter().toLowerCase();
+        //if no input text to filter, show all business, set all business marker visible
         if (!filter) {
             for(var i = 0; i < self.businessList().length;i++){
                 self.businessList()[i].marker.setVisible(true);
             }
             return self.businessList();
-        } else {
+        }
+        // if there are input text to filter
+        else {
             return ko.utils.arrayFilter(self.businessList(), function(item) {
+                // set found items marker visibility to true, not found ones to false
                 if(item.name.toLowerCase().indexOf(filter) === -1){
                     item.marker.setVisible(false);
                 }else{
                     item.marker.setVisible(true);
                 }
-                //return ko.utils.stringStartsWith(item.toLowerCase(), filter);
                 return item.name.toLowerCase().indexOf(filter) !== -1;
             });
         }
     }, AppViewModel);
 
-
+    // the function to make the yelp api request
+    // reference: http://stackoverflow.com/questions/13149211/yelp-api-google-app-script-oauth
     function getDataYelpAjax(zipcodeToSearch, keyWordToSearch) {
-        /*
-         * yelp API v2.0 token/secret
-         */
+        // keys obtained from yelp
         var auth = {
             consumerKey: "vVbyoRo4h1WxLAC25iI_Kw",
             consumerSecret: "olUvqmlNc3hOsXVLaiiKYm5XiBE",
@@ -123,18 +120,11 @@ function AppViewModel() {
                 signatureMethod: "HMAC-SHA1"
             }
         };
-
-        /*
-         *  Create a variable "accessor" to pass on to OAuth.SignatureMethod
-         */
         var accessor = {
             consumerSecret: auth.consumerSecret,
             tokenSecret: auth.accessTokenSecret
         };
-
-        /*
-         *  Create a array object "parameter" to pass on "message" JSON object
-         */
+        //   parameter array to pass on "message" JSON object
         var parameters = [];
         parameters.push(['term', keyWordToSearch]);
         parameters.push(['location', zipcodeToSearch]);
@@ -144,70 +134,45 @@ function AppViewModel() {
         parameters.push(['oauth_token', auth.accessToken]);
         parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
 
-        /*
-         *  Create a JSON object "message" to pass on to OAuth.setTimestampAndNonce
-         */
+
         var message = {
             action: 'http://api.yelp.com/v2/search',
             method: 'GET',
             parameters: parameters
         };
-
-        /*
-         *  OAuth proof-of-concept using JS
-         */
+        //Oauth js
         OAuth.setTimestampAndNonce(message);
         OAuth.SignatureMethod.sign(message, accessor);
 
-        /*
-         *  OAuth proof-of-concept using JS
-         */
-
         var parameterMap = OAuth.getParameterMap(message.parameters);
-        var request = $.ajax({
-            url: message.action +'d',
+        $.ajax({
+            url: message.action,
             data: parameterMap,
             dataType: 'jsonp',
             global:'true',
+            // error message shown when request failed
             error: function(xhr, textStatus, errorThrown) {
-                //if (textStatus !== null) {
-                //    alert("error: " + textStatus);
-                //} else if (errorThrown !== null) {
-                //    alert("exception: " + errorThrown.message);
-                //}
-                //else {
-                    alert ("error");
-                //}
+                    alert ("Yelp Ajax request failed");
             },
             success: function (data) {
-                // console.dir(data);
+                // call the generateItemList function to parse the json data
                 generateItemList(data);
             }
-
         });
-
     }
-
+    //parse json data
     function generateItemList(jsonResponse) {
         // a list of array of business responded by yelp
         var businessArray = jsonResponse.businesses;
-
-        //self.businessList(businessArray);
         var businessesArrayLen = businessArray.length;
-        // pass in only one instance of infoWindow to the window
-        // to make sure only one window displayed after click a few markers
-         var infoWindow = new google.maps.InfoWindow();
-        // for each business add to the list and add a marker on the map
+        // for each json business create a business instance
         for (var i = 0; i < businessesArrayLen; i++) {
-            //$('#list-places').append("<li class=list-group-item id='list-places" + i + "'>" + businessArray[i].name + "<br>" + businessArray[i].location.address + '</li>');
-           // console.log(businessArray[i].name);
-            var theBusiness = new Business(infoWindow, businessArray[i]) ;
-           // google.maps.event.addDomListener(window, 'load', Business(infoWindow, businessArray[i]));
-
+            var theBusiness = new Business( businessArray[i]) ;
             self.businessList.push(theBusiness);
-            //self.businessListName.push(theBusiness.name);
         }
-
     }
+
+    // call the yelp api
+    getDataYelpAjax(10118, "comic store");
 }
 ko.applyBindings(new AppViewModel());
