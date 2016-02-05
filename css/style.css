@@ -14,7 +14,7 @@ html, body {
     background-color: #F5F5F5;
     border: 1px solid #DDDDDD;
     color: #3B3C3E;
-    font-size: 10px;
+    font-size: 15px;
     font-weight: bold;
     padding: 10px 10px 5px 5px;
     height: 100%;
@@ -34,6 +34,16 @@ html, body {
         padding: 10px 10px 5px 5px;
         text-align: center;
         display: inline-block;
-        font-size: 9px;
+        font-size: 15px;
     }
+    /*make the search group and map on a stack when screen size is small*/
+    #search-group {
+        width:100%;
+        height:50%;
+    }
+    #map{
+        width:100%;
+        height:50%;
+    }
+
 }

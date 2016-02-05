@@ -48,7 +48,7 @@ var Business = function (place) {
         toggleBounce(self.marker);
         self.marker.infoWindow.open(map, self.marker);
     });
-}
+};
 
 // the function to make a marker bounce and show info window
 function toggleBounce(marker){
@@ -62,8 +62,8 @@ function toggleBounce(marker){
             marker.setAnimation(null);
         }, 2000);
         setTimeout(function () {
-        marker.infoWindow.close();
-        }, 3000);
+            marker.infoWindow.close();
+        }, 4000);
     }
 }
 
@@ -81,30 +81,21 @@ function AppViewModel() {
     self.clickAction =function(business){
         toggleBounce(business.marker);
         business.marker.infoWindow.open(map,business.marker);
-    }
+    };
     //ko.utils.arrayFilter - filter the items using the filter text
     //filter the items based on input text
     self.searchedItem = ko.dependentObservable(function() {
         var filter = self.filter().toLowerCase();
-        //if no input text to filter, show all business, set all business marker visible
-        if (!filter) {
-            for(var i = 0; i < self.businessList().length;i++){
-                self.businessList()[i].marker.setVisible(true);
+        return ko.utils.arrayFilter(self.businessList(), function(item) {
+            // set found items marker visibility to true, not found ones to false
+            if(item.name.toLowerCase().indexOf(filter) === -1){
+                item.marker.setVisible(false);
+            }else{
+                item.marker.setVisible(true);
             }
-            return self.businessList();
-        }
-        // if there are input text to filter
-        else {
-            return ko.utils.arrayFilter(self.businessList(), function(item) {
-                // set found items marker visibility to true, not found ones to false
-                if(item.name.toLowerCase().indexOf(filter) === -1){
-                    item.marker.setVisible(false);
-                }else{
-                    item.marker.setVisible(true);
-                }
-                return item.name.toLowerCase().indexOf(filter) !== -1;
-            });
-        }
+            return item.name.toLowerCase().indexOf(filter) !== -1;
+        });
+    
     }, AppViewModel);
 
     // the function to make the yelp api request
@@ -143,13 +134,13 @@ function AppViewModel() {
         //Oauth js
         OAuth.setTimestampAndNonce(message);
         OAuth.SignatureMethod.sign(message, accessor);
-
         var parameterMap = OAuth.getParameterMap(message.parameters);
         $.ajax({
             url: message.action,
             data: parameterMap,
             dataType: 'jsonp',
             global:'true',
+            timeout:4000,
             // error message shown when request failed
             error: function(xhr, textStatus, errorThrown) {
                     alert ("Yelp Ajax request failed");
