@@ -28,12 +28,10 @@
 <!-- yelp oauth api request -->
 <script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
 <script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
-<!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script> -->
-<script src="js/jquery.min.js"></script>
-<script src="js/jquery.jsonp.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script src="js/knockout.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAINgjWN_2R6K0LdjtxwhqZCTCS9QPHP1k&libraries=places&callback=initMap"
-        async defer></script>
+      onerror="googleError()"  async defer></script>
 <script src="js/app.js"></script>
 </body>
 </html>

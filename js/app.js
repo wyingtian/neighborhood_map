@@ -15,7 +15,10 @@ function initMap() {
         radius: '500',
     };
 }
-
+// when google map can't displayed, alert the user
+function googleError(){
+    alert('error happened when acquiring google map');
+}
 // Business is an business object defined based on ajax input
 // it has also contains a marker object,
 // parameter 'place' is a jason object returned by yelp api
@@ -117,6 +120,7 @@ function AppViewModel() {
         };
         //   parameter array to pass on "message" JSON object
         var parameters = [];
+       
         parameters.push(['term', keyWordToSearch]);
         parameters.push(['location', zipcodeToSearch]);
         parameters.push(['callback', 'cb']);
@@ -124,7 +128,6 @@ function AppViewModel() {
         parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
         parameters.push(['oauth_token', auth.accessToken]);
         parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
-
 
         var message = {
             action: 'http://api.yelp.com/v2/search',
@@ -135,21 +138,24 @@ function AppViewModel() {
         OAuth.setTimestampAndNonce(message);
         OAuth.SignatureMethod.sign(message, accessor);
         var parameterMap = OAuth.getParameterMap(message.parameters);
+
+        // Because Ajax jsonp does not support .error method
+        // here I use set time out to alert the user when request failed
+        var yelpTimeout = setTimeout(function(){
+            alert('There is an error when requesting yelp data');
+        }, 2000);
+
         $.ajax({
             url: message.action,
             data: parameterMap,
             dataType: 'jsonp',
-            global:'true',
-            timeout:4000,
-            // error message shown when request failed
-            error: function(xhr, textStatus, errorThrown) {
-                    alert ("Yelp Ajax request failed");
-            },
             success: function (data) {
-                // call the generateItemList function to parse the json data
-                generateItemList(data);
+            // call the generateItemList function to parse the json data
+            generateItemList(data);
+            // clear time out if success
+            clearTimeout(yelpTimeout);
             }
-        });
+         });
     }
     //parse json data
     function generateItemList(jsonResponse) {
